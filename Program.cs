@@ -1,22 +1,29 @@
+using GreenGoat.Core.Entities;
 using GreenGoat.Core.Interfaces;
 using GreenGoat.Infrastructure.Data;
 using GreenGoat.Infrastructure.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
-.AddJsonFile("appsettings.json", optional: false, reloadOnChange:true)
-.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
-.AddEnvironmentVariables();
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
 
 Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
 
 // Add services to the container.
+builder.Services.AddDbContext<ApplicationDbContext>(options => 
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Register ASP.NET Core Identity with the default token providers
+builder.Services.AddIdentity<User, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 
-//DI container registration
+// DI container registration
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddControllers();
